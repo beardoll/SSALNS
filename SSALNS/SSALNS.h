@@ -31,7 +31,7 @@ private:
 	vector<Customer*> PR3;     // 第三优先级顾客
 	vector<Car*> originPlan;   // 初始计划
 	Customer depot;
-	float eta1, eta2, eta3;    // 三类顾客的惩罚系数
+	float eta0, eta1, eta2, eta3;    // 四类顾客的惩罚系数
 	float lambda;              // 计算artificial路径代价时的惩罚系数
 	float capacity;
 };

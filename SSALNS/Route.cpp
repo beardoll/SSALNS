@@ -503,16 +503,55 @@ void Route::changeCarIndex(int newIndex){  // 更新车辆编号
 	carIndex = newIndex;
 }
 
-float Route::getLen(){   // 得到路径长度
+float Route::getLen(float eta0, float eta1, float eta2, float eta3, bool artificial){   // 得到路径长度
 	Customer *ptr1 = head;
 	Customer *ptr2 = head->next;
-	float len = 0;
-	while(ptr2 != NULL){
-		len = len + sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
-		ptr2 = ptr2->next;
-		ptr1 = ptr1->next;
+	if(artificial == false) { // real vehicle routing scheme
+		float len = 0;
+		while(ptr2 != NULL){
+			len = len + sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
+			ptr2 = ptr2->next;
+			ptr1 = ptr1->next;
+		}
+		return len;
+	} else {
+		float len = 0;
+		while(ptr2 != NULL){
+			float temp1, temp2;  // penalty paramter for two points
+			switch(ptr1->priority){
+			case 0:
+				temp1 = eta0;
+				break;
+			case 1:
+				temp1 = eta1;
+				break;
+			case 2:
+				temp1 = eta2;
+				break;
+			case 3:
+				temp1 = eta3;
+				break;
+			}
+			switch(ptr2->priority){
+			case 0:
+				temp2 = eta0;
+				break;
+			case 1:
+				temp2 = eta1;
+				break;
+			case 2:
+				temp2 = eta2;
+				break;
+			case 3:
+				temp2 = eta3;
+				break;
+			}
+			len = len + (temp1 + temp2)/2 * sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
+			ptr2 = ptr2->next;
+			ptr1 = ptr1->next;
+		}
+		return len;		
 	}
-	return len;
 }
 
 vector<float> Route::getArrivedTime(){     // 得到本车所有节点的arrivedTime

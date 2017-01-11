@@ -38,7 +38,7 @@ public:
 	// 计算把item插入到pre后面是否会违反时间窗约束
 	void refreshArrivedTime();   // 更新一下各个节点的到达时刻
 	void changeCarIndex(int newIndex);  // 更新车辆编号
-	float getLen();   // 得到路径长度
+	float getLen(float eta0 = 1.0f, float eta1 = 1.0f, float eta2 = 1.0f, float eta3 = 1.0f, bool artificial = false);   // 得到路径长度
 	vector<float> getArrivedTime();     // 得到本车所有节点的arrivedTime，注意第一个元素是0
 private:
 	Customer *head, *current, *rear;  // 表头，表尾和当前指针，当前指针指向货车当前的驻地

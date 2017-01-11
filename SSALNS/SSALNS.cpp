@@ -466,11 +466,13 @@ void SSALNS::reallocateCarIndex(vector<Car*> &originCarSet){  // 重新为货车编号
 	}
 }
 
-void SSALNS::removeNullRoute(vector<Car*> &originCarSet){    // 清除空车辆 
+void SSALNS::removeNullRoute(vector<Car*> &originCarSet){    
+	// 清除空车辆
+	// 只允许清除虚拟的空车
 	vector<Car*>::iterator iter;
 	int count = 0;
 	for(iter=originCarSet.begin(); iter<originCarSet.end();){
-		if ((*iter)->getRoute().getSize() == 0) { // 如果是空车
+		if ((*iter)->getRoute().getSize() == 0 && (*iter)->judgeArtificial() == true) { // 如果是空车而且是虚拟的车
 			iter = originCarSet.erase(iter);
 		} else {
 			(*iter)->changeCarIndex(count++);
@@ -520,9 +522,12 @@ float SSALNS::getCost(vector<Car*> originCarSet){
 	// 返回originCarSet的路畅
 	float totalCost = 0;
 	for(int i=0; i<(int)originCarSet.size(); i++){
-		float temp = originCarSet[i]->getRoute().getLen();
+
+		float temp;
 		if(originCarSet[i]->judgeArtificial() == true) {
-			temp *= lambda;
+			temp = originCarSet[i]->getRoute().getLen(eta0, eta1, eta2, eta3, true);
+		} else {
+			temp = originCarSet[i]->getRoute().getLen(eta0, eta1, eta2, eta3, false);
 		}
 		totalCost += temp;
 	}
