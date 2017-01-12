@@ -18,6 +18,7 @@ public:
 	bool isEmpty();   // 判断链表是否为空
 	bool insertAfter(Customer &item1, Customer &item2); // 在链表中与item1相同的节点后面插入节点item2
 	void insertAtFront(Customer &item);   // 在表头插入item
+	void insertAtRear(Customer &item);    // 在表尾插入item
 	bool deleteNode(Customer &item);   // 在链表中删除与item相同的节点
 	bool next();  // current指针往前走，若返回false，表示已经走到头
 	void printRoute();   // 打印路径
@@ -44,7 +45,7 @@ private:
 	Customer *head, *current, *rear;  // 表头，表尾和当前指针，当前指针指向货车当前的驻地
 	int size;         // 链表的长度
 	int carIndex;     // 所属货车
-	float quantityL, quantityB;  // linehaul和backhaul节点分别的重量
+	float quantity;   // 容量
 	float capacity;   // 车载量，在这里也存一下
 	void copy(const Route& L);  // 复制链表，供复制构造函数和重载“=”函数使用
 	vector<float> arrivedTime;  // 在各个节点的到达时刻

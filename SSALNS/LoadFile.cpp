@@ -33,6 +33,7 @@ bool LoadFile::getData(vector<Customer*> &allCustomer, Customer &depot, float &c
 			depot.serviceTime = 0;
 			depot.arrivedTime = 0;
 			depot.startTime = 0;
+			depot.priority = 0;
 		} else {
 			customer = new Customer;
 			customer->id = tempINT;        

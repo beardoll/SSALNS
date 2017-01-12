@@ -9,17 +9,17 @@ Car::~Car(){  // 内嵌对象的析构函数会被调用，不用在此处delete route
 
 }
 
-Car::Car(Car &item):route(item.route){  //复制构造函数
+Car::Car(Car &item):route(item.route), artificial(item.artificial){  //复制构造函数
 	this->state = item.state;
 	this->carIndex = item.carIndex;
 }
 
 
 Car& Car::operator= (Car &item){ // 重载赋值操作
-	this->route.clear();
 	this->route = item.route;
 	this->carIndex = item.carIndex;
 	this->state = item.state;
+	this->artificial = item.artificial;
 	return *this;
 }
 

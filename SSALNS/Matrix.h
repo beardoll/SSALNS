@@ -160,6 +160,7 @@ template <class T>
 T Matrix<T>::getMinAtRow(int row, int &pos){ // 得到第row行的最小值，返回其位置pos以及值
 	assert(row>=0 && row<rows);
 	T minValue = numeric_limits<T>::max();  // 定义最小值为无穷大
+	pos = 0;
 	for(int i=row*cols; i<(row+1)*cols; i++) {
 		if(elements[i] < minValue) {
 			minValue = elements[i];
@@ -173,6 +174,7 @@ template <class T>
 T Matrix<T>::getMinAtCol(int col, int &pos){ // 得到第col列的最小值，返回其位置pos以及值
 	assert(col>=0 && col<cols);
 	T minValue = numeric_limits<T>::max();  // 定义最小值为无穷大
+	pos = 0;   // 如果pos最终没有在for循环中赋值，说明所有的元素都是无穷大
 	int tpos;
 	for(int i=0; i<rows; i++){
 		tpos = i*cols+col;    // 定位当前元素

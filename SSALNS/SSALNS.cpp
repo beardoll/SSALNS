@@ -237,7 +237,7 @@ void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removed
 			removedIndexset.push_back(reducedCost[i].second);
 		}
 		sort(removedIndexset.begin(), removedIndexset.end());
-		vector<int>::iterator iterINT;
+		vector<int>::iterator iterINT;   // ÕûÊıÏòÁ¿µü´úÆ÷
 		iterINT = set_difference(allIndex.begin(), allIndex.end(), removedIndexset.begin(), removedIndexset.end(), indexsetInRoute.begin());
 		indexsetInRoute.resize(iterINT - indexsetInRoute.begin());
 	}
@@ -609,29 +609,59 @@ bool customerSetEqual(vector<Customer*>c1, vector<Customer*>c2){
 
 void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ±ÓÚËã·¨µÄmain()º¯Êı
 	int i;
-	int customerAmount = allCustomer.size();
+	int customerAmount = getCustomerNum(originPlan) + (int)PR2.size() + (int)PR3.size();  // ×ÜµÄ¹Ë¿ÍÊı
 	int originCarNum = (int)originPlan.size();   // ³õÊ¼ÓµÓĞµÄ»õ³µÊıÁ¿
+	vector<Customer*>::iterator custPtr;
+	vector<Car*>::iterator carIter;
+
+	// °Ñµ±Ç°ÓµÓĞµÄËùÓĞ¹Ë¿Í½Úµã·Åµ½allCustomerÖĞ
+	vector<Customer*> allCustomer;         // ËùÓĞµÄcustomer
+	allCustomer.reserve(customerAmount);   // ÎªallCustomerÔ¤Áô¿Õ¼ä
+	for(carIter = originPlan.begin(); carIter < originPlan.end(); carIter++) {
+		vector<Customer*> temp = (*carIter)->getRoute().getAllCustomer();
+		vector<Customer*>::iterator tempIter;
+		for(tempIter = temp.begin(); tempIter < temp.end(); tempIter++) {
+			allCustomer.push_back(*tempIter);
+		}
+	}
+	for(custPtr = PR2.begin(); custPtr < PR2.end(); custPtr++) {
+		allCustomer.push_back(*custPtr);
+	}
+	for(custPtr = PR3.begin(); custPtr < PR3.end(); custPtr++) {
+		allCustomer.push_back(*custPtr);
+	}
 
 	// ÏÈÎªPR2ºÍPR3¹Ë¿Í°²ÅÅartificial vehicleÈ¥·şÎñ
 	vector<Customer*> unscheduledCustomer(0);    // PR2 and PR3
-	vector<Customer*>::iterator custPtr;
-	for(custPtr = PR2.begin; custPtr < PR2.end(); custPtr++){
+	for(custPtr = PR2.begin(); custPtr < PR2.end(); custPtr++){
 		unscheduledCustomer.push_back(*custPtr);
 	}
-	for(custPtr = PR3.begin; custPtr < PR3.end(); custPtr++){
+	for(custPtr = PR3.begin(); custPtr < PR3.end(); custPtr++){
 		unscheduledCustomer.push_back(*custPtr);
 	}
 	vector<Car*> artificialCarSet(0);
 	Car *initialCar = new Car(depot, depot, capacity, originCarNum+1, true);  // ÏÈĞÂ½¨Ò»Á¾ĞéÄâ³µ
 	artificialCarSet.push_back(initialCar);
-	greedyInsert(artificialCarSet, unscheduledCustomer, 0, false);  // ÀûÓÃĞéÄâ³µ½«PR2ºÍPR3¹Ë¿Í×°½øÈ¥
-	float currentCost = getCost(currentCarSet);
-	vector<Car*> globalCarSet(0);
-	for(i=0; i<(int)currentCarSet.size();i++){
-		Car* newCar = new Car(*currentCarSet[i]);
-		globalCarSet.push_back(newCar);
+	regretInsert(artificialCarSet, unscheduledCustomer, 0, false);  // ÀûÓÃĞéÄâ³µ½«PR2ºÍPR3¹Ë¿Í×°½øÈ¥
+
+	// °Ñcurrent planµÄcarºÍartificialcarsetÖĞµÄcar×éºÏÆğÀ´
+	vector<Car*> currentCarSet(0);  // µ±Ç°½â
+	vector<Car*> globalCarSet(0);   // È«¾Ö×îÓÅ½â£¬³õÊ¼»¯Óëµ±Ç°½âÏàÍ¬
+	for(carIter = originPlan.begin(); carIter < originPlan.end(); carIter++) {
+		Car* newCar1 = new Car(**carIter);
+		Car* newCar2 = new Car(**carIter);
+		currentCarSet.push_back(newCar1);
+		globalCarSet.push_back(newCar2);
 	}
+	for(carIter = artificialCarSet.begin(); carIter < artificialCarSet.end(); carIter++) {
+		Car* newCar1 = new Car(**carIter);
+		Car* newCar2 = new Car(**carIter);
+		currentCarSet.push_back(newCar1);
+		globalCarSet.push_back(newCar2);
+	}
+	float currentCost = getCost(currentCarSet);
 	float globalCost = currentCost;
+
 	vector<size_t> hashTable(0);  // ¹şÏ£±í
 	hashTable.push_back(codeForSolution(currentCarSet));
 
@@ -746,6 +776,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 
 		////@@@@@@@@@ dangerous!!!!!!!!! @@@@@@@@@//
 		//removeIndex = 0;
+		//insertIndex = 0;
 		////////////////////////////////////////////
 
 		// ÏàÓ¦Ëã×ÓÊ¹ÓÃ´ÎÊı¼ÓÒ»

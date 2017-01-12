@@ -1,12 +1,18 @@
 #ifndef _SSLANS_H
 #define _SSALNS_H
 #include "Car.h"
+#include "Matrix.h"
 #include<vector>
 
 class SSALNS{  // SSALNSÀ„∑®
 public:
 	SSALNS(vector<Customer*> PR2, vector<Customer*> PR3, vector<Car*> originPlan, Customer depot, float capacity):
-		PR2(PR2), PR3(PR3), originPlan(originPlan), capacity(capacity){};
+		PR2(PR2), PR3(PR3), originPlan(originPlan), depot(depot), capacity(capacity){
+		eta0 = 0;
+		eta1 = 100;
+		eta2 = 20;
+		eta3 = 5;
+	};
 	~SSALNS(){};
 	void shawRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p, float maxd, float maxt, float maxquantity);
 	void randomRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q);
