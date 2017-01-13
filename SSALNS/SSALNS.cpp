@@ -74,15 +74,15 @@ void deleteCustomer(vector<int> removedIndexset, vector<int> customerNum, vector
 	}
 }
 
-void SSALNS::computeReducedCost(vector<Car*> originCarSet, vector<int> indexsetInRoute, vector<int> removedIndexset, 
-						vector<pair<float, int>> &reducedCost){
+void computeReducedCost(vector<Car*> originCarSet, vector<int> indexsetInRoute, vector<int> removedIndexset, 
+						vector<pair<float, int>> &reducedCost, vector<float> DTpara){
 	// indexsetInRoute: ÉĞÔÚÂ·¾¶ÖĞµÄ½Úµã±àºÅ
 	// removedIndexSet: ÒÑ±»ÒÆ³ıµÄ½Úµã±àºÅ
 	int i;
 	int carNum = originCarSet.end() - originCarSet.begin();
 	vector<float> reducedCostInRoute(0); // ÉĞÔÚÂ·¾¶ÖĞµÄ¸÷¸ö½ÚµãµÄÒÆ³ı´ú¼Û
 	for(i=0; i<carNum; i++){
-		vector<float> tempReducedCost = originCarSet[i]->getRoute().computeReducedCost(eta1, eta2, eta3, originCarSet[i]->judgeArtificial());
+		vector<float> tempReducedCost = originCarSet[i]->getRoute().computeReducedCost(DTpara, originCarSet[i]->judgeArtificial());
 		reducedCostInRoute.insert(reducedCostInRoute.end(), tempReducedCost.begin(), tempReducedCost.end());
 	}
 	for(i=0; i<indexsetInRoute.end()-indexsetInRoute.begin(); i++){
@@ -106,6 +106,7 @@ void SSALNS::shawRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedC
 	// p: Ôö¼Óremove²Ù×÷µÄËæ»úĞÔ
 	// maxd, maxt, maxquantity: ¹éÒ»»¯Öµ
 	// Ã¿´ÎÑ­»·ÒÆ³ı y^p*|L|¸ö¹Ë¿Í£¬LÎªÂ·¾¶ÖĞÊ£Óà½Úµã£¬yÊÇ0-1Ö®¼äµÄËæ»úÊı
+
 	int phi = 9;
 	int kai = 3;
 	int psi = 2;
@@ -207,7 +208,7 @@ void SSALNS::randomRemoval(vector<Car*> &originCarSet, vector<Customer*> &remove
 	}
 }
 
-void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p){
+void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p, vector<float> DTpara){
 	// originCarSet: Î´Ö´ĞĞremove²Ù×÷Ç°µÄ»õ³µ¼¯ºÏ
 	// removedCarSet: Ö´ĞĞremove²Ù×÷ºóµÄ»õ³µ¼¯ºÏ
 	// removedCustomer: ±»ÒÆ³ıµÄ¹Ë¿Í½Úµã
@@ -227,7 +228,7 @@ void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removed
 	indexsetInRoute = allIndex;
 	while((int)removedIndexset.size() < q){
 		vector<pair<float, int>> reducedCost(customerAmount);  // ¸÷½ÚµãµÄÒÆ³ı´ú¼Û	
-		computeReducedCost(originCarSet, indexsetInRoute, removedIndexset, reducedCost);
+		computeReducedCost(originCarSet, indexsetInRoute, removedIndexset, reducedCost, DTpara);
 		sort(reducedCost.begin(), reducedCost.end(), ascendSort);   // µİÔöÅÅĞò
 		float y = rand()/(RAND_MAX+1.0f);  // ²úÉú0-1Ö®¼äµÄËæ»úÊı
 		int indexInRouteLen = indexsetInRoute.end() - indexsetInRoute.begin();
@@ -247,8 +248,17 @@ void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removed
 	}
 }
 
-void SSALNS::generateMatrix(vector<int> &allIndex, vector<Car*> &removedCarSet, vector<Customer*> removedCustomer, Matrix<float> &minInsertPerRoute, 
-					Matrix<Customer> &minInsertPos, Matrix<float> &secondInsertPerRoute, Matrix<Customer> &secondInsertPos, float noiseAmount, bool noiseAdd){
+void generateMatrix(vector<int> &allIndex, vector<Car*> &removedCarSet, vector<Customer*> removedCustomer, Matrix<float> &minInsertPerRoute, 
+					Matrix<Customer> &minInsertPos, Matrix<float> &secondInsertPerRoute, Matrix<Customer> &secondInsertPos, float noiseAmount, bool noiseAdd,
+					vector<float> DTpara){
+	float DT11, DT12, DT21, DT22, DT31, DT32;
+	vector<float>::iterator DTIter = DTpara.begin();
+	DT11 = *(DTIter++);
+	DT12 = *(DTIter++);
+	DT21 = *(DTIter++);
+	DT22 = *(DTIter++);
+	DT31 = *(DTIter++);
+	DT32 = *(DTIter++);
 	int removedCustomerNum = removedCustomer.size();
 	int carNum = removedCarSet.size();
 	for(int i=0; i<carNum; i++){
@@ -260,18 +270,28 @@ void SSALNS::generateMatrix(vector<int> &allIndex, vector<Car*> &removedCarSet, 
 			float minValue, secondValue;
 			Customer customer1, customer2;
 			float penaltyPara;
-			if(removedCarSet[i]->judgeArtificial() == false){  // Èç¹û²»ÊÇĞéÄâ³µ£¬Ôò²»ĞèÒª½øĞĞ³Í·£
-				penaltyPara = 1; 
-			} else {   // Èç¹ûÊÇĞéÄâ³µ£¬ÔòĞèÒª½øĞĞ³Í·£
-				switch(removedCustomer[j]->priority) {  // ¸ù¾İ²»Í¬µÄ¹Ë¿ÍÓÅÏÈ¼¶£¬¸³Óè²»Í¬µÄ³Í·£ÏµÊı£¨µ±²åÈëµ½artificial vehicleÊ±£©
+			if(removedCarSet[i]->judgeArtificial() == false){  // Èç¹û²»ÊÇĞéÄâ³µ
+				switch(removedCustomer[j]->priority) {  // Èç¹ûÊÇĞéÄâ³µ
 				case 1:
-					penaltyPara = eta1;
+					penaltyPara = -DT11;
 					break;
 				case 2:
-					penaltyPara = eta2;
+					penaltyPara = -DT21;
 					break;
 				case 3:
-					penaltyPara = eta3;
+					penaltyPara = -DT31;
+					break;
+				}
+			} else {   // Èç¹ûÊÇĞéÄâ³µ£¬ÔòĞèÒª½øĞĞ³Í·£
+				switch(removedCustomer[j]->priority) {  // Èç¹ûÊÇĞéÄâ³µ
+				case 1:
+					penaltyPara = DT12;
+					break;
+				case 2:
+					penaltyPara = DT22;
+					break;
+				case 3:
+					penaltyPara = DT32;
 					break;
 				}
 			}
@@ -284,9 +304,19 @@ void SSALNS::generateMatrix(vector<int> &allIndex, vector<Car*> &removedCarSet, 
 	}
 }
 
-void SSALNS::updateMatrix(vector<int> restCustomerIndex, Matrix<float> &minInsertPerRoute, Matrix<Customer> &minInsertPos, 
+void updateMatrix(vector<int> restCustomerIndex, Matrix<float> &minInsertPerRoute, Matrix<Customer> &minInsertPos, 
 				  Matrix<float> &secondInsertPerRoute, Matrix<Customer> &secondInsertPos, int selectedCarPos, vector<Car*> &removedCarSet,
-				  vector<Customer*>removedCustomer, float noiseAmount, bool noiseAdd){
+				  vector<Customer*>removedCustomer, float noiseAmount, bool noiseAdd, vector<float> DTpara){
+	// ÌáÈ¡DTparaÖĞµÄÔªËØ
+	float DT11, DT12, DT21, DT22, DT31, DT32;
+	vector<float>::iterator DTIter = DTpara.begin();
+	DT11 = *(DTIter++);
+	DT12 = *(DTIter++);
+	DT21 = *(DTIter++);
+	DT22 = *(DTIter++);
+	DT31 = *(DTIter++);
+	DT32 = *(DTIter++);
+
 	// ¸üĞÂËÄ¸ö¾ØÕó
 	removedCarSet[selectedCarPos]->getRoute().refreshArrivedTime();
 	for(int i=0; i<(int)restCustomerIndex.size();i++) {
@@ -295,17 +325,27 @@ void SSALNS::updateMatrix(vector<int> restCustomerIndex, Matrix<float> &minInser
 		Customer customer1, customer2;
 		float penaltyPara;
 		if(removedCarSet[selectedCarPos]->judgeArtificial() == false) { // Èç¹û²»ÊÇĞé¹¹µÄ³µÁ¾
-			penaltyPara = 1;
+			switch(removedCustomer[index]->priority) {  // ¸ù¾İ²»Í¬µÄ¹Ë¿ÍÓÅÏÈ¼¶£¬¸³Óè²»Í¬µÄ³Í·£ÏµÊı£¨µ±²åÈëµ½artificial vehicleÊ±£©
+			case 1:
+				penaltyPara = -DT11;
+				break;
+			case 2:
+				penaltyPara = -DT21;
+				break;
+			case 3:
+				penaltyPara = -DT31;
+				break;
+			}		
 		} else {   // ÊÇĞé¹¹µÄ³µÁ¾
 			switch(removedCustomer[index]->priority) {  // ¸ù¾İ²»Í¬µÄ¹Ë¿ÍÓÅÏÈ¼¶£¬¸³Óè²»Í¬µÄ³Í·£ÏµÊı£¨µ±²åÈëµ½artificial vehicleÊ±£©
 			case 1:
-				penaltyPara = eta1;
+				penaltyPara = DT12;
 				break;
 			case 2:
-				penaltyPara = eta2;
+				penaltyPara = DT22;
 				break;
 			case 3:
-				penaltyPara = eta3;
+				penaltyPara = DT32;
 				break;
 			}		
 		}
@@ -318,7 +358,7 @@ void SSALNS::updateMatrix(vector<int> restCustomerIndex, Matrix<float> &minInser
 }
 
 void SSALNS::greedyInsert(vector<Car*> &removedCarSet, vector<Customer*> removedCustomer,
-							 float noiseAmount, bool noiseAdd){
+							 float noiseAmount, bool noiseAdd, vector<float> DTpara){
 	// °ÑremovedCustomer²åÈëµ½removedCarSetÖĞ
 	// Èôµ±Ç°»õ³µÎŞ·¨ÈİÄÉËùÓĞµÄremovedCustomer£¬ÔòĞÂ½¨artificial car
 	int removedCustomerNum = removedCustomer.end() - removedCustomer.begin();  // ĞèÒª²åÈëµ½Â·¾¶ÖĞµÄ½ÚµãÊıÄ¿
@@ -331,7 +371,8 @@ void SSALNS::greedyInsert(vector<Car*> &removedCarSet, vector<Customer*> removed
 	Matrix<float> secondInsertPerRoute(carNum, removedCustomerNum);  // ÔÚÃ¿ÌõÂ·¾¶ÖĞµÄ´ÎĞ¡²åÈë´ú¼Û¾ØÕó
 	Matrix<Customer> secondInsertPos(carNum, removedCustomerNum);    // ÔÚÃ¿ÌõÂ·¾¶ÖĞµÄ´ÎĞ¡²åÈë´ú¼ÛËù¶ÔÓ¦µÄ½Úµã
 	vector<int> allIndex(0);   // ¶ÔremovedCustomer½øĞĞ±àºÅ,1,2,3,...
-	generateMatrix(allIndex, removedCarSet, removedCustomer, minInsertPerRoute,  minInsertPos, secondInsertPerRoute, secondInsertPos, noiseAmount, noiseAdd);
+	generateMatrix(allIndex, removedCarSet, removedCustomer, minInsertPerRoute,  minInsertPos, secondInsertPerRoute, secondInsertPos, 
+		noiseAmount, noiseAdd, DTpara);
 	vector<int> restCustomerIndex = allIndex;  // Ê£ÏÂÃ»ÓĞ²åÈëµ½Â·¾¶ÖĞµÄ½ÚµãÏÂ±ê£¬Ïà¶ÔÓÚremovedCustomer
 	vector<pair<float, pair<int,int>>> minInsertPerRestCust(0);  // ¸÷¸öremovedcustomerµÄ×îĞ¡²åÈë´ú¼Û
 	                                                             // Ö»°üº¬Ã»ÓĞ²åÈëµ½Â·¾¶ÖĞµÄ½Úµã
@@ -356,7 +397,7 @@ void SSALNS::greedyInsert(vector<Car*> &removedCarSet, vector<Customer*> removed
 			iterINT = set_difference(allIndex.begin(), allIndex.end(), alreadyInsertIndex.begin(), alreadyInsertIndex.end(), restCustomerIndex.begin()); // ¸üĞÂrestCustomerIndex
 			restCustomerIndex.resize(iterINT-restCustomerIndex.begin());
 			updateMatrix(restCustomerIndex, minInsertPerRoute, minInsertPos, secondInsertPerRoute, secondInsertPos, 
-				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd);
+				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd, DTpara);
 		} else {  // Ã»ÓĞ¿ÉĞĞ²åÈëÎ»ÖÃ£¬ÔòÔÙĞÂ¿ªÒ»Á¾»õ³µ
 			int selectedCarPos = carNum++;  // ±»Ñ¡ÖĞµÄ³µÁ¾Î»ÖÃ
 			Car *newCar = new Car(depot, depot, capacity, newCarIndex++, true);
@@ -372,13 +413,13 @@ void SSALNS::greedyInsert(vector<Car*> &removedCarSet, vector<Customer*> removed
 			secondInsertPerRoute.addOneRow();
 			secondInsertPos.addOneRow();
 			updateMatrix(restCustomerIndex, minInsertPerRoute, minInsertPos, secondInsertPerRoute, secondInsertPos, 
-				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd);
+				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd, DTpara);
 		}
 	}
 }
 
 void SSALNS::regretInsert(vector<Car*> &removedCarSet, vector<Customer*> removedCustomer,
-							 float noiseAmount, bool noiseAdd){
+							 float noiseAmount, bool noiseAdd, vector<float> DTpara){
 	// °ÑremovedCustomer²åÈëµ½removedCarSetÖĞ
 	int removedCustomerNum = removedCustomer.end() - removedCustomer.begin();  // ĞèÒª²åÈëµ½Â·¾¶ÖĞµÄ½ÚµãÊıÄ¿
 	int carNum = removedCarSet.end() - removedCarSet.begin();    // ³µÁ¾ÊıÄ¿
@@ -390,7 +431,8 @@ void SSALNS::regretInsert(vector<Car*> &removedCarSet, vector<Customer*> removed
 	Matrix<float> secondInsertPerRoute(carNum, removedCustomerNum);  // ÔÚÃ¿ÌõÂ·¾¶ÖĞµÄ´ÎĞ¡²åÈë´ú¼Û¾ØÕó
 	Matrix<Customer> secondInsertPos(carNum, removedCustomerNum);    // ÔÚÃ¿ÌõÂ·¾¶ÖĞµÄ´ÎĞ¡²åÈë´ú¼ÛËù¶ÔÓ¦µÄ½Úµã
 	vector<int> allIndex(0);   // ¶ÔremovedCustomer½øĞĞ±àºÅ
-	generateMatrix(allIndex, removedCarSet, removedCustomer, minInsertPerRoute,  minInsertPos, secondInsertPerRoute, secondInsertPos, noiseAmount, noiseAdd);
+	generateMatrix(allIndex, removedCarSet, removedCustomer, minInsertPerRoute,  minInsertPos, secondInsertPerRoute, secondInsertPos, 
+		noiseAmount, noiseAdd, DTpara);
 	vector<int> restCustomerIndex = allIndex;  // Ê£ÏÂÃ»ÓĞ²åÈëµ½Â·¾¶ÖĞµÄ½ÚµãÏÂ±ê£¬Ïà¶ÔÓÚremovedCustomer
 	vector<pair<float, pair<int,int>>> regretdiffPerRestCust(0);  // ¸÷¸öremovedcustomerµÄ×îĞ¡²åÈë´ú¼ÛÓë´ÎĞ¡²åÈë´ú¼ÛÖ®²î
 	                                                              // Ö»°üº¬Ã»ÓĞ²åÈëµ½Â·¾¶ÖĞµÄ½Úµã
@@ -442,7 +484,7 @@ void SSALNS::regretInsert(vector<Car*> &removedCarSet, vector<Customer*> removed
 			secondInsertPerRoute.addOneRow();
 			secondInsertPos.addOneRow();
 			updateMatrix(restCustomerIndex, minInsertPerRoute, minInsertPos, secondInsertPerRoute, secondInsertPos, 
-				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd);	
+				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd, DTpara);	
 		} else {
 			// ·ñÔò£¬²»ĞèÒª¿ª±ÙĞÂ³µ
 			selectedCarPos = regretdiffPerRestCust[0].second.second;
@@ -454,19 +496,19 @@ void SSALNS::regretInsert(vector<Car*> &removedCarSet, vector<Customer*> removed
 			iterINT = set_difference(allIndex.begin(), allIndex.end(), alreadyInsertIndex.begin(), alreadyInsertIndex.end(), restCustomerIndex.begin());
 			restCustomerIndex.resize(iterINT-restCustomerIndex.begin());
 			updateMatrix(restCustomerIndex, minInsertPerRoute, minInsertPos, secondInsertPerRoute, secondInsertPos, 
-				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd);
+				selectedCarPos, removedCarSet, removedCustomer, noiseAmount, noiseAdd, DTpara);
 		}
 	}
 }
 
 
-void SSALNS::reallocateCarIndex(vector<Car*> &originCarSet){  // ÖØĞÂÎª»õ³µ±àºÅ
+void reallocateCarIndex(vector<Car*> &originCarSet){  // ÖØĞÂÎª»õ³µ±àºÅ
 	for(int i=0; i<(int)originCarSet.size(); i++){
 		originCarSet[i]->changeCarIndex(i);
 	}
 }
 
-void SSALNS::removeNullRoute(vector<Car*> &originCarSet){    
+void removeNullRoute(vector<Car*> &originCarSet){    
 	// Çå³ı¿Õ³µÁ¾
 	// Ö»ÔÊĞíÇå³ıĞéÄâµÄ¿Õ³µ
 	vector<Car*>::iterator iter;
@@ -497,7 +539,7 @@ size_t codeForSolution(vector<Car*> originCarSet){  // ¶ÔÃ¿¸ö½â£¨¶àÌõÂ·¾¶£©½øĞĞh
 	return str_hash(allStr);
 }
 
-void computeMax(vector<Customer*> allCustomer, float &maxd, float &maxquantity){
+void computeMax(vector<Customer*> allCustomer, float &maxd, float &mind, float &maxquantity){
 	// ¼ÆËãËùÓĞ¹Ë¿ÍÖ®¼äµÄ×î´ó¾àÀëÒÔ¼°¹Ë¿ÍµÄ×î´ó»õÎïĞèÇóÁ¿
 	int customerAmount = (int)allCustomer.size();
 	Matrix<float> D(customerAmount, customerAmount);
@@ -515,19 +557,20 @@ void computeMax(vector<Customer*> allCustomer, float &maxd, float &maxquantity){
 	}
 	int t1, t2;
 	maxd = D.getMaxValue(t1, t2);
+	mind = D.getMinValue(t1, t2);
 	maxquantity = tempmax;
 }
 
-float SSALNS::getCost(vector<Car*> originCarSet){
-	// ·µ»ØoriginCarSetµÄÂ·³©
+float getCost(vector<Car*> originCarSet, vector<float> DTpara){
+	// ·µ»ØoriginCarSetµÄÂ·³¤
 	float totalCost = 0;
 	for(int i=0; i<(int)originCarSet.size(); i++){
 
 		float temp;
 		if(originCarSet[i]->judgeArtificial() == true) {
-			temp = originCarSet[i]->getRoute().getLen(eta0, eta1, eta2, eta3, true);
+			temp = originCarSet[i]->getRoute().getLen(DTpara, true);
 		} else {
-			temp = originCarSet[i]->getRoute().getLen(eta0, eta1, eta2, eta3, false);
+			temp = originCarSet[i]->getRoute().getLen(DTpara, false);
 		}
 		totalCost += temp;
 	}
@@ -609,7 +652,10 @@ bool customerSetEqual(vector<Customer*>c1, vector<Customer*>c2){
 
 void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ±ÓÚËã·¨µÄmain()º¯Êı
 	int i;
-	int customerAmount = getCustomerNum(originPlan) + (int)PR2.size() + (int)PR3.size();  // ×ÜµÄ¹Ë¿ÍÊı
+	int PR1NUM = getCustomerNum(originPlan);
+	int PR2NUM = (int)PR2.size();
+	int PR3NUM = (int)PR3.size();
+	int customerAmount = PR1NUM + PR2NUM + PR3NUM;  // ×ÜµÄ¹Ë¿ÍÊı
 	int originCarNum = (int)originPlan.size();   // ³õÊ¼ÓµÓĞµÄ»õ³µÊıÁ¿
 	vector<Customer*>::iterator custPtr;
 	vector<Car*>::iterator carIter;
@@ -631,6 +677,28 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 		allCustomer.push_back(*custPtr);
 	}
 
+	// ¼ÆËã±äÁ¿DT11 ~ DT32£¬ÒÀ´Î·ÅÈëvector DTparaÖĞ
+	float DT11, DT12, DT21, DT22, DT31, DT32;
+	float maxd, mind, maxquantity;    // ½ÚµãÖ®¼äµÄ×î´ó/×îĞ¡¾àÀëÒÔ¼°½ÚµãµÄ×î´ó»õÎïĞèÇóÁ¿
+	computeMax(allCustomer, maxd, mind, maxquantity);
+	DT32 = 1;
+	DT31 = 2*maxd + 1;
+	DT22 = 5;
+	DT21 = 4*maxd + 1;
+	DT12 = 20;
+	float tempsigma1 = 2*maxd + DT12;
+	float tempsigma2 = 2*(PR1NUM + PR2NUM + PR3NUM) * maxd + PR2NUM * DT22 + PR3NUM * DT32 - 
+		(PR1NUM + PR2NUM + PR3NUM) * mind + PR2NUM * DT21 + PR3NUM * DT31 - DT12;
+	DT11 = max(tempsigma1, tempsigma2) + 1;
+	DT11 = 2000;
+	vector<float> DTpara;
+	DTpara.push_back(DT11);
+	DTpara.push_back(DT12);
+	DTpara.push_back(DT21);
+	DTpara.push_back(DT22);
+	DTpara.push_back(DT31);
+	DTpara.push_back(DT32);
+
 	// ÏÈÎªPR2ºÍPR3¹Ë¿Í°²ÅÅartificial vehicleÈ¥·şÎñ
 	vector<Customer*> unscheduledCustomer(0);    // PR2 and PR3
 	for(custPtr = PR2.begin(); custPtr < PR2.end(); custPtr++){
@@ -642,7 +710,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 	vector<Car*> artificialCarSet(0);
 	Car *initialCar = new Car(depot, depot, capacity, originCarNum+1, true);  // ÏÈĞÂ½¨Ò»Á¾ĞéÄâ³µ
 	artificialCarSet.push_back(initialCar);
-	regretInsert(artificialCarSet, unscheduledCustomer, 0, false);  // ÀûÓÃĞéÄâ³µ½«PR2ºÍPR3¹Ë¿Í×°½øÈ¥
+	greedyInsert(artificialCarSet, unscheduledCustomer, 0, false, DTpara);  // ÀûÓÃĞéÄâ³µ½«PR2ºÍPR3¹Ë¿Í×°½øÈ¥
 
 	// °Ñcurrent planµÄcarºÍartificialcarsetÖĞµÄcar×éºÏÆğÀ´
 	vector<Car*> currentCarSet(0);  // µ±Ç°½â
@@ -659,7 +727,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 		currentCarSet.push_back(newCar1);
 		globalCarSet.push_back(newCar2);
 	}
-	float currentCost = getCost(currentCarSet);
+	float currentCost = getCost(currentCarSet, DTpara);
 	float globalCost = currentCost;
 
 	vector<size_t> hashTable(0);  // ¹şÏ£±í
@@ -705,13 +773,11 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 	int maxIter = 25000; // ×ÜµÄµü´ú´ÎÊı
 	int segment = 100;   // Ã¿¸ôÒ»¸ösegment¸üĞÂremoveProb, removeWeightµÈ²ÎÊı
 	float w = 0.05f;      // ³õÊ¼ÎÂ¶ÈÉè¶¨ÓĞ¹Ø²ÎÊı
-	float T = w * currentCost / (float)log(2);   // ³õÊ¼ÎÂ¶È
+	float T = w * abs(currentCost) / (float)log(2);   // ³õÊ¼ÎÂ¶È
 	int p = 6;           // Ôö¼ÓshawRemovalËæ»úĞÔ
 	int pworst = 3;      // Ôö¼ÓworstRemovalµÄËæ»úĞÔ
 	float ksi = 0.4f;     // Ã¿´ÎÒÆ³ıµÄ×î´ó½ÚµãÊıÄ¿Õ¼×Ü½ÚµãÊıµÄ±ÈÀı
 	float eta = 0.025f;   // ÔëÉùÏµÊı
-	float maxd, maxquantity;    // ½ÚµãÖ®¼äµÄ×î´ó¾àÀëÒÔ¼°½ÚµãµÄ×î´ó»õÎïĞèÇóÁ¿
-	computeMax(allCustomer, maxd, maxquantity);
 	float noiseAmount = eta * maxd;   // ÔëÉùÁ¿
 	float c = 0.9998f;    // ½µÎÂËÙÂÊ
 	srand(unsigned(time(0)));
@@ -813,7 +879,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 			}
 		case 2:
 			{
-				worstRemoval(tempCarSet, removedCustomer, currentRemoveNum, pworst);
+				worstRemoval(tempCarSet, removedCustomer, currentRemoveNum, pworst, DTpara);
 				break;
 			}
 		}
@@ -821,12 +887,12 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 		switch(insertIndex) {
 		case 0:
 			{
-				greedyInsert(tempCarSet, removedCustomer, noiseAmount, noiseAdd);
+				greedyInsert(tempCarSet, removedCustomer, noiseAmount, noiseAdd, DTpara);
 				break;
 			}
 		case 1:
 			{
-				regretInsert(tempCarSet, removedCustomer, noiseAmount, noiseAdd);
+				regretInsert(tempCarSet, removedCustomer, noiseAmount, noiseAdd, DTpara);
 				break;
 			}
 		}
@@ -835,7 +901,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 		removeNullRoute(tempCarSet);
 
 		// Ê¹ÓÃÄ£ÄâÍË»ğËã·¨¾ö¶¨ÊÇ·ñ½ÓÊÕ¸Ã½â
-		float newCost = getCost(tempCarSet);
+		float newCost = getCost(tempCarSet, DTpara);
 		float acceptProb = exp(-(newCost - currentCost)/T);
 		bool accept = false;
 		if(acceptProb > rand()/(RAND_MAX+1.0f)) {

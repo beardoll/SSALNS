@@ -10,7 +10,7 @@
 using namespace std;
 
 static const string FILE_PATH = "C:/Users/cfinsbear/Documents/SSALNS/SSALNS/solomon-1987-rc1/";
-static const string FILE_NAME = "RC103_100.xml";
+static const string FILE_NAME = "RC105_100.xml";
 static const string FILE_PATH2 = "C:/Users/cfinsbear/Documents/SSALNS/SSALNS/ALNS_Result/";
 static const string FILE_NAME2 = FILE_NAME;
 static const int NUM_OF_CUSTOMER = 100;
@@ -41,30 +41,36 @@ vector<Customer*> constructCustomerSet(vector<int> idSet, vector<Customer*> allC
 }
 
 void constructScenario(vector<Customer*> allCustomer, Customer depot, float capacity, vector<Car*> &initialPlan, vector<Customer*> &PR2, vector<Customer*> &PR3) {
-	int a1[4] = {61, 39, 37, 70};
-	int a2[5] = {54, 44, 41, 71, 93};
-	int a3[4] = {92, 62, 67, 80};
-	int a4[5] = {2, 8, 6, 4, 100};
-	int b[8] = {57, 23, 18, 22, 74, 82, 75, 58};
-	int c[8] = {65, 87, 84, 33, 27, 28, 26, 34};
+	//int a1[4] = {61, 39, 37, 70};
+	//int a2[5] = {54, 44, 41, 71, 93};
+	//int a3[4] = {92, 62, 67, 80};
+	//int a4[5] = {2, 8, 6, 4, 100};
+	//int b[8] = {57, 23, 18, 22, 74, 82, 75, 58};
+	//int c[8] = {65, 87, 84, 33, 27, 28, 26, 34};
+	int a1[5] = {39, 36, 38, 40, 70};
+	int a2[5] = {92, 62, 28, 50, 93};
+	int a3[4] = {82, 10, 13, 17};
+	int a4[3] = {71, 84, 66};
+	int b[7] = {45, 3, 8, 7, 46, 8, 83};
+	int c[12] = {23, 49, 20, 53, 12, 14, 15, 16, 47, 78, 64, 86};
 	initialPlan.reserve(4);
-	vector<int> temp1(a1, a1+4);
+	vector<int> temp1(a1, a1+5);
 	Car* c1 = constructCar(temp1, allCustomer, depot,  depot, 1, capacity);
 	vector<int> temp2(a2, a2+5);
 	Car* c2 = constructCar(temp2, allCustomer, depot,  depot, 2, capacity);
 	vector<int> temp3(a3, a3+4);
 	Car* c3 = constructCar(temp3, allCustomer, depot,  depot, 3, capacity);
-	vector<int> temp4(a4, a4+5);
+	vector<int> temp4(a4, a4+3);
 	Car* c4 = constructCar(temp4, allCustomer, depot,  depot, 4, capacity);
 	initialPlan.push_back(c1);
 	initialPlan.push_back(c2);
 	initialPlan.push_back(c3);
 	initialPlan.push_back(c4);
-	PR2.reserve(8);
-	vector<int> temp5(b, b+8);
+	PR2.reserve(7);
+	vector<int> temp5(b, b+7);
 	PR2 = constructCustomerSet(temp5, allCustomer, 2);
-	PR3.reserve(8);
-	vector<int> temp6(c, c+8);
+	PR3.reserve(12);
+	vector<int> temp6(c, c+12);
 	PR3 = constructCustomerSet(temp6, allCustomer, 3);
 }
 

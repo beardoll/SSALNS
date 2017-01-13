@@ -290,10 +290,18 @@ vector<Customer*> Route::getAllCustomer(){  // 得到路径中所有的顾客节点
 	return customerSet;
 }
 
-vector<float> Route::computeReducedCost(float eta1, float eta2, float eta3, bool mark){ 
+vector<float> Route::computeReducedCost(vector<float> DTpara, bool mark){ 
 	// 得到所有顾客节点的移除代价
 	// 值越小表示移除它可以节省更多的代价
 	// mark = true表示需要添加惩罚，mark = false表示不需要添加惩罚
+	float DT11, DT12, DT21, DT22, DT31, DT32;
+	vector<float>::iterator DTIter = DTpara.begin();
+	DT11 = *(DTIter++);
+	DT12 = *(DTIter++);
+	DT21 = *(DTIter++);
+	DT22 = *(DTIter++);
+	DT31 = *(DTIter++);
+	DT32 = *(DTIter++);
 	vector<float> costArr(0);
 	Customer *ptr1 = head;   // 前节点
 	Customer *ptr2, *ptr3;
@@ -303,18 +311,30 @@ vector<float> Route::computeReducedCost(float eta1, float eta2, float eta3, bool
 		float temp =  -sqrt(pow(ptr1->x - ptr2->x, 2) + pow(ptr1->y - ptr2->y, 2)) - 
 			sqrt(pow(ptr2->x - ptr3->x, 2) + pow(ptr2->y - ptr3->y, 2)) +
 			sqrt(pow(ptr1->x - ptr3->x, 2) + pow(ptr1->y - ptr3->y, 2));
-		if(mark == true) {
+		if(mark == true) {   // 在artificial vehicle上
 			switch(ptr2->priority) {
 			case 1:
-				temp *= eta1;
+				temp += DT12;
 				break;
 			case 2:
-				temp *= eta2;
+				temp += DT22;
 				break;
 			case 3:
-				temp *= eta3;
+				temp += DT32;
 				break;
 			}
+		} else {    // 在real vehicles上
+			switch(ptr2->priority) {
+			case 1:
+				temp -= DT11;
+				break;
+			case 2:
+				temp -= DT21;
+				break;
+			case 3:
+				temp -= DT31;
+				break;
+			}			
 		}
 		costArr.push_back(temp);
 		ptr1 = ptr1->next;
@@ -395,11 +415,12 @@ void Route::computeInsertCost(Customer item, float &minValue, Customer &customer
 				float temp = sqrt(pow(pre->x - item.x, 2) + pow(pre->y - item.y, 2)) +
 						sqrt(pow(item.x - succ->x, 2) + pow(item.y - succ->y, 2)) -
 						sqrt(pow(pre->x - succ->x, 2) + pow(pre->y - succ->y, 2));
-				temp = temp * penaltyPara;   // 惩罚
+				temp += penaltyPara;   // 惩罚
 				if(noiseAdd == true) { // 如果需要添加随机噪声
 					float y = rand()/(RAND_MAX+1.0f);   // y in (0,1)
 					float noise = -noiseAmount + 2*noiseAmount*y;
-					temp = max(temp+noise, 0.0f);
+					temp = temp + noise;
+					// temp = max(temp+noise, 0.0f);
 				}
 				if(temp <= minValue){  // 找到了更小的，更新minValue和secondValue
 					secondValue = minValue;
@@ -441,13 +462,39 @@ void Route::changeCarIndex(int newIndex){  // 更新车辆编号
 	carIndex = newIndex;
 }
 
-float Route::getLen(float eta0, float eta1, float eta2, float eta3, bool artificial){   // 得到路径长度
+float Route::getLen(vector<float> DTpara, bool artificial){   // 得到路径长度
+	// 提取DTpara
+	float DT11, DT12, DT21, DT22, DT31, DT32;
+	vector<float>::iterator DTIter = DTpara.begin();
+	DT11 = *(DTIter++);
+	DT12 = *(DTIter++);
+	DT21 = *(DTIter++);
+	DT22 = *(DTIter++);
+	DT31 = *(DTIter++);
+	DT32 = *(DTIter++);
+
 	Customer *ptr1 = head;
 	Customer *ptr2 = head->next;
 	if(artificial == false) { // real vehicle routing scheme
 		float len = 0;
 		while(ptr2 != NULL){
+			float temp1;
+			switch(ptr1->priority){
+			case 0:
+				temp1 = 0.0f;
+				break;
+			case 1:
+				temp1 = -DT11;
+				break;
+			case 2:
+				temp1 = -DT21;
+				break;
+			case 3:
+				temp1 = -DT31;
+				break;
+			}
 			len = len + sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
+			len += temp1;
 			ptr2 = ptr2->next;
 			ptr1 = ptr1->next;
 		}
@@ -459,33 +506,20 @@ float Route::getLen(float eta0, float eta1, float eta2, float eta3, bool artific
 			float temp2 = 1.0f;  // penalty paramter for two points
 			switch(ptr1->priority){
 			case 0:
-				temp1 = eta0;
+				temp1 = 0.0f;
 				break;
 			case 1:
-				temp1 = eta1;
+				temp1 = DT12;
 				break;
 			case 2:
-				temp1 = eta2;
+				temp1 = DT22;
 				break;
 			case 3:
-				temp1 = eta3;
-				break;
-			}
-			switch(ptr2->priority){
-			case 0:
-				temp2 = eta0;
-				break;
-			case 1:
-				temp2 = eta1;
-				break;
-			case 2:
-				temp2 = eta2;
-				break;
-			case 3:
-				temp2 = eta3;
+				temp1 = DT32;
 				break;
 			}
 			len = len + (temp1 + temp2)/2 * sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
+			len += temp1;
 			ptr2 = ptr2->next;
 			ptr1 = ptr1->next;
 		}
