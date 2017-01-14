@@ -12,7 +12,7 @@ public:
 	~SSALNS(){};
 	void shawRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p, float maxd, float maxt, float maxquantity);
 	void randomRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q);
-	void worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p, vector<float> DTpara);  
+	void worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p);  
 	void greedyInsert(vector<Car*> &removedCarSet, vector<Customer*> removedCustomer, float noiseAmount, bool noiseAdd, vector<float> DTpara);
 	void regretInsert(vector<Car*> &removedCarSet, vector<Customer*> removedCustomer, float noiseAmount, bool noiseAdd, vector<float> DTpara);
 	void run(vector<Car*> &finalCarSet, float &finalCost);  // 运行算法，相当于算法的main()函数

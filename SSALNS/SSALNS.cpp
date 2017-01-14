@@ -75,14 +75,14 @@ void deleteCustomer(vector<int> removedIndexset, vector<int> customerNum, vector
 }
 
 void computeReducedCost(vector<Car*> originCarSet, vector<int> indexsetInRoute, vector<int> removedIndexset, 
-						vector<pair<float, int>> &reducedCost, vector<float> DTpara){
+						vector<pair<float, int>> &reducedCost){
 	// indexsetInRoute: ÉĞÔÚÂ·¾¶ÖĞµÄ½Úµã±àºÅ
 	// removedIndexSet: ÒÑ±»ÒÆ³ıµÄ½Úµã±àºÅ
 	int i;
 	int carNum = originCarSet.end() - originCarSet.begin();
 	vector<float> reducedCostInRoute(0); // ÉĞÔÚÂ·¾¶ÖĞµÄ¸÷¸ö½ÚµãµÄÒÆ³ı´ú¼Û
 	for(i=0; i<carNum; i++){
-		vector<float> tempReducedCost = originCarSet[i]->getRoute().computeReducedCost(DTpara, originCarSet[i]->judgeArtificial());
+		vector<float> tempReducedCost = originCarSet[i]->getRoute().computeReducedCost();
 		reducedCostInRoute.insert(reducedCostInRoute.end(), tempReducedCost.begin(), tempReducedCost.end());
 	}
 	for(i=0; i<indexsetInRoute.end()-indexsetInRoute.begin(); i++){
@@ -95,6 +95,62 @@ void computeReducedCost(vector<Car*> originCarSet, vector<int> indexsetInRoute, 
 		reducedCost[index].first = MAX_FLOAT;  // ÒÑ¾­ÒÆ³ıµôµÄ½Úµã£¬²»×÷¿¼ÂÇ
 		reducedCost[index].second = index;	
 	}
+}
+
+int roulette(vector<float> probability) {
+	// ÂÖÅÌËã·¨
+	// Ëæ»úÑ¡³öÒ»¸öÕûÊık (from 0 to |probability|)¡£
+	vector<float>::iterator floatIter;
+	float sumation1 = accumulate(probability.begin(), probability.end(), 0); // ÇóºÍ
+	for(floatIter = probability.begin(); floatIter < probability.end(); floatIter++) {
+		*floatIter /= sumation1;  // ¹éÒ»»¯
+	}
+	int totalNum = probability.end() - probability.begin();  // ×ÜÊıÄ¿
+	int k = 0;
+	float sumation = 0;
+	float randFloat = rand()/(RAND_MAX + 1.0f);
+	floatIter = probability.begin();
+	while((sumation < randFloat) && (floatIter < probability.end())) {
+		k++;
+		sumation += *(floatIter++);
+	}
+	k = max(k-1, 0); // randFloat = 0 Ê± k-1 < 0
+	return k;
+}
+
+vector<int> probSelection(vector<pair<float, int>> items, int num) {
+	// ¸ù¾İitemsÖĞµÄÊı¾İ´óĞ¡¹ØÏµ£¬È·¶¨¸÷¸öÔªËØ±»Ñ¡ÖĞµÄ¸ÅÂÊ
+	// È»ºó°´¸ÅÂÊËæ»úÑ¡È¡num¸öËæ»úÊı
+	int totalNum = items.end() - items.begin();
+	vector<int> allNum;   // 0 - totalNum
+	allNum.reserve(totalNum);
+	vector<float> probability;
+	probability.reserve(totalNum);
+	vector<pair<float, int>>::iterator pairIter;
+	vector<float>::iterator floatIter;
+	float tempmin = MAX_FLOAT;
+	for(pairIter = items.begin(); pairIter < items.end(); pairIter++) {
+		allNum.push_back(pairIter - items.begin());
+		probability.push_back(pairIter->first);
+		if(pairIter->first < tempmin) {
+			tempmin = pairIter->first;
+		}
+	}
+	for(floatIter = probability.begin(); floatIter < probability.end(); floatIter++) {
+		*floatIter -= tempmin;  // ÕıÔò»¯
+	}
+	vector<int> selectIndex;  // ±»Ñ¡ÖĞµÄÏÂ±ê
+	selectIndex.reserve(num);
+	while((int)selectIndex.size() < num) {
+		// ÕÒ³önum¸ö²»Í¬µÄÊı
+		int temp = roulette(probability);  // µ±Ç°Ñ¡ÖĞµÄÏÂ±ê
+		vector<int>::iterator intIter = find(selectIndex.begin(), selectIndex.end(), temp);
+		if(intIter == selectIndex.end()) {  // ²»ÔÚselectIndexÖĞ
+			selectIndex.push_back(temp);
+			probability[temp] = 0;  // Ñ¡ÖĞµÄ¸ÅÂÊ¸³ÖµÎª0
+		}
+	}
+	return selectIndex;
 }
 
 void SSALNS::shawRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer,
@@ -208,7 +264,7 @@ void SSALNS::randomRemoval(vector<Car*> &originCarSet, vector<Customer*> &remove
 	}
 }
 
-void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p, vector<float> DTpara){
+void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removedCustomer, int q, int p){
 	// originCarSet: Î´Ö´ĞĞremove²Ù×÷Ç°µÄ»õ³µ¼¯ºÏ
 	// removedCarSet: Ö´ĞĞremove²Ù×÷ºóµÄ»õ³µ¼¯ºÏ
 	// removedCustomer: ±»ÒÆ³ıµÄ¹Ë¿Í½Úµã
@@ -228,13 +284,17 @@ void SSALNS::worstRemoval(vector<Car*> &originCarSet, vector<Customer*> &removed
 	indexsetInRoute = allIndex;
 	while((int)removedIndexset.size() < q){
 		vector<pair<float, int>> reducedCost(customerAmount);  // ¸÷½ÚµãµÄÒÆ³ı´ú¼Û	
-		computeReducedCost(originCarSet, indexsetInRoute, removedIndexset, reducedCost, DTpara);
+		computeReducedCost(originCarSet, indexsetInRoute, removedIndexset, reducedCost);
 		sort(reducedCost.begin(), reducedCost.end(), ascendSort);   // µİÔöÅÅĞò
 		float y = rand()/(RAND_MAX+1.0f);  // ²úÉú0-1Ö®¼äµÄËæ»úÊı
 		int indexInRouteLen = indexsetInRoute.end() - indexsetInRoute.begin();
 		int removedNum = static_cast<int>(max(floor(pow(y,p)*indexInRouteLen), 1.0f));
 		assert(removedNum <= indexInRouteLen);
-		for(i=0; i<removedNum; i++){
+		//vector<int> selectedIndex = probSelection(reducedCost, removedNum);
+		//for(vector<int>::iterator intIter = selectedIndex.begin(); intIter < selectedIndex.end(); intIter++){
+		//	removedIndexset.push_back(reducedCost[*intIter].second);
+		//}
+		for(i=0; i<removedNum; i++) {
 			removedIndexset.push_back(reducedCost[i].second);
 		}
 		sort(removedIndexset.begin(), removedIndexset.end());
@@ -542,22 +602,26 @@ size_t codeForSolution(vector<Car*> originCarSet){  // ¶ÔÃ¿¸ö½â£¨¶àÌõÂ·¾¶£©½øĞĞh
 void computeMax(vector<Customer*> allCustomer, float &maxd, float &mind, float &maxquantity){
 	// ¼ÆËãËùÓĞ¹Ë¿ÍÖ®¼äµÄ×î´ó¾àÀëÒÔ¼°¹Ë¿ÍµÄ×î´ó»õÎïĞèÇóÁ¿
 	int customerAmount = (int)allCustomer.size();
-	Matrix<float> D(customerAmount, customerAmount);
+	Matrix<float> D1(customerAmount, customerAmount);
+	Matrix<float> D2(customerAmount, customerAmount);
 	float tempmax = -MAX_FLOAT;
 	for(int i=0; i<customerAmount; i++){
 		if(allCustomer[i]->quantity > tempmax){
 			tempmax = allCustomer[i]->quantity;
 		}
-		D.setValue(i,i, 0.0f);
+		D1.setValue(i,i, 0.0f);
+		D2.setValue(i,i, MAX_FLOAT);
 		for(int j=i+1; j<customerAmount; j++){
 			float temp = sqrt(pow(allCustomer[i]->x - allCustomer[j]->x, 2) + pow(allCustomer[i]->y - allCustomer[j]->y, 2));
-			D.setValue(i,j, temp);
-			D.setValue(j,i, temp);
+			D1.setValue(i, j, temp);
+			D2.setValue(i, j, temp);
+			D1.setValue(j, i, temp);
+			D2.setValue(j, i, temp);
 		}
 	}
 	int t1, t2;
-	maxd = D.getMaxValue(t1, t2);
-	mind = D.getMinValue(t1, t2);
+	maxd = D1.getMaxValue(t1, t2);
+	mind = D2.getMinValue(t1, t2);
 	maxquantity = tempmax;
 }
 
@@ -679,19 +743,25 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 
 	// ¼ÆËã±äÁ¿DT11 ~ DT32£¬ÒÀ´Î·ÅÈëvector DTparaÖĞ
 	float DT11, DT12, DT21, DT22, DT31, DT32;
-	float maxd, mind, maxquantity;    // ½ÚµãÖ®¼äµÄ×î´ó/×îĞ¡¾àÀëÒÔ¼°½ÚµãµÄ×î´ó»õÎïĞèÇóÁ¿
+	float maxd, mind, maxquantity, distToDepot;    // ½ÚµãÖ®¼äµÄ×î´ó/×îĞ¡¾àÀëÒÔ¼°½ÚµãµÄ×î´ó»õÎïĞèÇóÁ¿
 	computeMax(allCustomer, maxd, mind, maxquantity);
+	distToDepot = 0;
+	for(custPtr = allCustomer.begin(); custPtr < allCustomer.end(); custPtr++) {
+		distToDepot += sqrt(pow((*custPtr)->x - depot.x, 2) + pow((*custPtr)->y - depot.y, 2));
+	}
 	DT32 = 1;
 	DT31 = 2*maxd + 1;
 	DT22 = 5;
 	DT21 = 4*maxd + 1;
 	DT12 = 20;
 	float tempsigma1 = 2*maxd + DT12;
-	float tempsigma2 = 2*(PR1NUM + PR2NUM + PR3NUM) * maxd + PR2NUM * DT22 + PR3NUM * DT32 - 
+	//float tempsigma2 = 2*(PR1NUM + PR2NUM + PR3NUM) * maxd + PR2NUM * DT22 + PR3NUM * DT32 - 
+	//	(PR1NUM + PR2NUM + PR3NUM) * mind + PR2NUM * DT21 + PR3NUM * DT31 - DT12;
+	float tempsigma2 = 2*distToDepot + PR2NUM * DT22 + PR3NUM * DT32 - 
 		(PR1NUM + PR2NUM + PR3NUM) * mind + PR2NUM * DT21 + PR3NUM * DT31 - DT12;
 	DT11 = max(tempsigma1, tempsigma2) + 1;
-	DT11 = 2000;
 	vector<float> DTpara;
+
 	DTpara.push_back(DT11);
 	DTpara.push_back(DT12);
 	DTpara.push_back(DT21);
@@ -770,7 +840,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 	float r = 0.1f;       // weight¸üĞÂËÙÂÊ
 
 	// ÆäÓàºËĞÄ²ÎÊı
-	int maxIter = 25000; // ×ÜµÄµü´ú´ÎÊı
+	int maxIter = 30000; // ×ÜµÄµü´ú´ÎÊı
 	int segment = 100;   // Ã¿¸ôÒ»¸ösegment¸üĞÂremoveProb, removeWeightµÈ²ÎÊı
 	float w = 0.05f;      // ³õÊ¼ÎÂ¶ÈÉè¶¨ÓĞ¹Ø²ÎÊı
 	float T = w * abs(currentCost) / (float)log(2);   // ³õÊ¼ÎÂ¶È
@@ -879,7 +949,7 @@ void SSALNS::run(vector<Car*> &finalCarSet, float &finalCost){  // ÔËĞĞËã·¨£¬Ïàµ
 			}
 		case 2:
 			{
-				worstRemoval(tempCarSet, removedCustomer, currentRemoveNum, pworst, DTpara);
+				worstRemoval(tempCarSet, removedCustomer, currentRemoveNum, pworst);
 				break;
 			}
 		}

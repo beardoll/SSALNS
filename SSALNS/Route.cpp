@@ -290,18 +290,10 @@ vector<Customer*> Route::getAllCustomer(){  // 得到路径中所有的顾客节点
 	return customerSet;
 }
 
-vector<float> Route::computeReducedCost(vector<float> DTpara, bool mark){ 
+vector<float> Route::computeReducedCost(){ 
 	// 得到所有顾客节点的移除代价
 	// 值越小表示移除它可以节省更多的代价
 	// mark = true表示需要添加惩罚，mark = false表示不需要添加惩罚
-	float DT11, DT12, DT21, DT22, DT31, DT32;
-	vector<float>::iterator DTIter = DTpara.begin();
-	DT11 = *(DTIter++);
-	DT12 = *(DTIter++);
-	DT21 = *(DTIter++);
-	DT22 = *(DTIter++);
-	DT31 = *(DTIter++);
-	DT32 = *(DTIter++);
 	vector<float> costArr(0);
 	Customer *ptr1 = head;   // 前节点
 	Customer *ptr2, *ptr3;
@@ -311,31 +303,6 @@ vector<float> Route::computeReducedCost(vector<float> DTpara, bool mark){
 		float temp =  -sqrt(pow(ptr1->x - ptr2->x, 2) + pow(ptr1->y - ptr2->y, 2)) - 
 			sqrt(pow(ptr2->x - ptr3->x, 2) + pow(ptr2->y - ptr3->y, 2)) +
 			sqrt(pow(ptr1->x - ptr3->x, 2) + pow(ptr1->y - ptr3->y, 2));
-		if(mark == true) {   // 在artificial vehicle上
-			switch(ptr2->priority) {
-			case 1:
-				temp += DT12;
-				break;
-			case 2:
-				temp += DT22;
-				break;
-			case 3:
-				temp += DT32;
-				break;
-			}
-		} else {    // 在real vehicles上
-			switch(ptr2->priority) {
-			case 1:
-				temp -= DT11;
-				break;
-			case 2:
-				temp -= DT21;
-				break;
-			case 3:
-				temp -= DT31;
-				break;
-			}			
-		}
 		costArr.push_back(temp);
 		ptr1 = ptr1->next;
 	}

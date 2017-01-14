@@ -30,7 +30,7 @@ public:
 	Customer& currentPos();   // 返回当前位置
 	int getSize();     // 得到当前链表的大小
 	vector<Customer*> getAllCustomer();  // 得到路径中所有的顾客节点
-	vector<float> computeReducedCost(vector<float> DTpara , bool mark = false);  // 计算所有节点的移除代价
+	vector<float> computeReducedCost();  // 计算所有节点的移除代价
 	void computeInsertCost(Customer item, float &minValue, Customer &customer1, float &secondValue, Customer &customer2, 
 		float noiseAmount = 0.0f, bool noiseAdd = false, float penaltyPara = 0.0f);  
 	// 计算item节点在路径中的最小插入代价和次小插入代价
