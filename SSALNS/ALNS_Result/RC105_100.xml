@@ -7,13 +7,51 @@
                 <cx>40</cx>
                 <cy>50</cy>
             </Node>
-            <Node id="5" type="L">
+            <Node id="65" type="L">
+                <cx>35</cx>
+                <cy>40</cy>
+            </Node>
+            <Node id="83" type="L">
+                <cx>37</cx>
+                <cy>31</cy>
+            </Node>
+            <Node id="48" type="L">
+                <cx>42</cx>
+                <cy>5</cy>
+            </Node>
+            <Node id="23" type="L">
+                <cx>38</cx>
+                <cy>5</cy>
+            </Node>
+            <Node id="57" type="L">
+                <cx>30</cx>
+                <cy>25</cy>
+            </Node>
+            <Node id="52" type="L">
+                <cx>25</cx>
+                <cy>30</cy>
+            </Node>
+            <Node id="74" type="L">
                 <cx>20</cx>
-                <cy>85</cy>
+                <cy>20</cy>
+            </Node>
+            <Node id="0" type="D">
+                <cx>40</cx>
+                <cy>50</cy>
+            </Node>
+        </Route>
+        <Route index="1">
+            <Node id="0" type="D">
+                <cx>40</cx>
+                <cy>50</cy>
             </Node>
             <Node id="45" type="L">
                 <cx>20</cx>
                 <cy>82</cy>
+            </Node>
+            <Node id="5" type="L">
+                <cx>20</cx>
+                <cy>85</cy>
             </Node>
             <Node id="88" type="L">
                 <cx>24</cx>
@@ -28,52 +66,14 @@
                 <cy>50</cy>
             </Node>
         </Route>
-        <Route index="1">
-            <Node id="0" type="D">
-                <cx>40</cx>
-                <cy>50</cy>
-            </Node>
-            <Node id="83" type="L">
-                <cx>37</cx>
-                <cy>31</cy>
-            </Node>
-            <Node id="48" type="L">
-                <cx>42</cx>
-                <cy>5</cy>
-            </Node>
-            <Node id="23" type="L">
-                <cx>38</cx>
-                <cy>5</cy>
-            </Node>
-            <Node id="20" type="L">
-                <cx>42</cx>
-                <cy>15</cy>
-            </Node>
-            <Node id="57" type="L">
-                <cx>30</cx>
-                <cy>25</cy>
-            </Node>
-            <Node id="74" type="L">
-                <cx>20</cx>
-                <cy>20</cy>
-            </Node>
-            <Node id="0" type="D">
-                <cx>40</cx>
-                <cy>50</cy>
-            </Node>
-        </Route>
         <Route index="2">
             <Node id="0" type="D">
                 <cx>40</cx>
                 <cy>50</cy>
             </Node>
-            <Node id="65" type="L">
-                <cx>35</cx>
-                <cy>40</cy>
-            </Node>
-            <Node id="52" type="L">
-                <cx>25</cx>
-                <cy>30</cy>
+            <Node id="12" type="L">
+                <cx>8</cx>
+                <cy>45</cy>
             </Node>
             <Node id="15" type="L">
                 <cx>2</cx>
@@ -87,10 +87,6 @@
                 <cx>2</cx>
                 <cy>60</cy>
             </Node>
-            <Node id="12" type="L">
-                <cx>8</cx>
-                <cy>45</cy>
-            </Node>
             <Node id="60" type="L">
                 <cx>15</cx>
                 <cy>60</cy>
@@ -101,6 +97,28 @@
             </Node>
         </Route>
         <Route index="3">
+            <Node id="0" type="D">
+                <cx>40</cx>
+                <cy>50</cy>
+            </Node>
+            <Node id="76" type="L">
+                <cx>60</cx>
+                <cy>12</cy>
+            </Node>
+            <Node id="18" type="L">
+                <cx>44</cx>
+                <cy>5</cy>
+            </Node>
+            <Node id="20" type="L">
+                <cx>42</cx>
+                <cy>15</cy>
+            </Node>
+            <Node id="0" type="D">
+                <cx>40</cx>
+                <cy>50</cy>
+            </Node>
+        </Route>
+        <Route index="4">
             <Node id="0" type="D">
                 <cx>40</cx>
                 <cy>50</cy>
@@ -122,24 +140,6 @@
                 <cy>50</cy>
             </Node>
         </Route>
-        <Route index="4">
-            <Node id="0" type="D">
-                <cx>40</cx>
-                <cy>50</cy>
-            </Node>
-            <Node id="76" type="L">
-                <cx>60</cx>
-                <cy>12</cy>
-            </Node>
-            <Node id="18" type="L">
-                <cx>44</cx>
-                <cy>5</cy>
-            </Node>
-            <Node id="0" type="D">
-                <cx>40</cx>
-                <cy>50</cy>
-            </Node>
-        </Route>
     </RouteSet>
-    <RouteLen>-43715.1</RouteLen>
+    <RouteLen>-40630.5</RouteLen>
 </Result>

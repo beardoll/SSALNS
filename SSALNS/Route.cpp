@@ -290,10 +290,16 @@ vector<Customer*> Route::getAllCustomer(){  // 得到路径中所有的顾客节点
 	return customerSet;
 }
 
-vector<float> Route::computeReducedCost(){ 
+vector<float> Route::computeReducedCost(float DTpara[], bool artificial){ 
 	// 得到所有顾客节点的移除代价
 	// 值越小表示移除它可以节省更多的代价
 	// mark = true表示需要添加惩罚，mark = false表示不需要添加惩罚
+	float DTH1, DTH2, DTL1, DTL2;
+	float *DTIter = DTpara;
+	DTH1 = *(DTIter++);
+	DTH2 = *(DTIter++);
+	DTL1 = *(DTIter++);
+	DTL2 = *(DTIter++);
 	vector<float> costArr(0);
 	Customer *ptr1 = head;   // 前节点
 	Customer *ptr2, *ptr3;
@@ -303,6 +309,33 @@ vector<float> Route::computeReducedCost(){
 		float temp =  -sqrt(pow(ptr1->x - ptr2->x, 2) + pow(ptr1->y - ptr2->y, 2)) - 
 			sqrt(pow(ptr2->x - ptr3->x, 2) + pow(ptr2->y - ptr3->y, 2)) +
 			sqrt(pow(ptr1->x - ptr3->x, 2) + pow(ptr1->y - ptr3->y, 2));
+		float temp1 = 0;
+		if(artificial == true) {
+			switch(ptr1->priority){
+			case 0:
+				temp1 = 0;
+				break;
+			case 1:
+				temp1 = -DTH2;
+				break;
+			case 2:
+				temp1 = -DTL2;
+				break;
+			}
+		} else {
+			switch(ptr1->priority){
+			case 0:
+				temp1 = 0;
+				break;
+			case 1:
+				temp1 = DTH1;
+				break;
+			case 2:
+				temp1 = DTL1;
+				break;
+			}		
+		}
+		temp += temp1;
 		costArr.push_back(temp);
 		ptr1 = ptr1->next;
 	}
@@ -385,7 +418,8 @@ void Route::computeInsertCost(Customer item, float &minValue, Customer &customer
 				temp += penaltyPara;   // 惩罚
 				if(noiseAdd == true) { // 如果需要添加随机噪声
 					float y = rand()/(RAND_MAX+1.0f);   // y in (0,1)
-					float noise = -noiseAmount + 2*noiseAmount*y;
+					float noise = 0 - penaltyPara * y;  // 噪声量和惩罚因子成正比，且符号相反
+					// float noise = -noiseAmount + 2*noiseAmount*y;
 					temp = temp + noise;
 					// temp = max(temp+noise, 0.0f);
 				}
@@ -429,16 +463,15 @@ void Route::changeCarIndex(int newIndex){  // 更新车辆编号
 	carIndex = newIndex;
 }
 
-float Route::getLen(vector<float> DTpara, bool artificial){   // 得到路径长度
+float Route::getLen(float DTpara[], bool artificial){   // 得到路径长度
+	// 返回值为实际的路径长度加上惩罚因子
 	// 提取DTpara
-	float DT11, DT12, DT21, DT22, DT31, DT32;
-	vector<float>::iterator DTIter = DTpara.begin();
-	DT11 = *(DTIter++);
-	DT12 = *(DTIter++);
-	DT21 = *(DTIter++);
-	DT22 = *(DTIter++);
-	DT31 = *(DTIter++);
-	DT32 = *(DTIter++);
+	float DTH1, DTH2, DTL1, DTL2;
+	float *DTIter = DTpara;
+	DTH1 = *(DTIter++);
+	DTH2 = *(DTIter++);
+	DTL1 = *(DTIter++);
+	DTL2 = *(DTIter++);
 
 	Customer *ptr1 = head;
 	Customer *ptr2 = head->next;
@@ -451,13 +484,10 @@ float Route::getLen(vector<float> DTpara, bool artificial){   // 得到路径长度
 				temp1 = 0.0f;
 				break;
 			case 1:
-				temp1 = -DT11;
+				temp1 = -DTH1;
 				break;
 			case 2:
-				temp1 = -DT21;
-				break;
-			case 3:
-				temp1 = -DT31;
+				temp1 = -DTL1;
 				break;
 			}
 			len = len + sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
@@ -476,16 +506,13 @@ float Route::getLen(vector<float> DTpara, bool artificial){   // 得到路径长度
 				temp1 = 0.0f;
 				break;
 			case 1:
-				temp1 = DT12;
+				temp1 = DTH2;
 				break;
 			case 2:
-				temp1 = DT22;
-				break;
-			case 3:
-				temp1 = DT32;
+				temp1 = DTL2;
 				break;
 			}
-			len = len + (temp1 + temp2)/2 * sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
+			len = len + sqrt(pow(ptr1->x - ptr2->x, 2)+pow(ptr1->y - ptr2->y, 2));
 			len += temp1;
 			ptr2 = ptr2->next;
 			ptr1 = ptr1->next;
@@ -496,4 +523,14 @@ float Route::getLen(vector<float> DTpara, bool artificial){   // 得到路径长度
 
 vector<float> Route::getArrivedTime(){     // 得到本车所有节点的arrivedTime
 	return arrivedTime;
+}
+
+Customer Route::getHeadNode() {
+	Customer* newCust = new Customer(*head);
+	return *newCust; 
+}
+
+Customer Route::getRearNode() {
+	Customer* newCust = new Customer(*rear);
+	return *newCust; 
 }

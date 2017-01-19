@@ -30,7 +30,7 @@ public:
 	Customer& currentPos();   // 返回当前位置
 	int getSize();     // 得到当前链表的大小
 	vector<Customer*> getAllCustomer();  // 得到路径中所有的顾客节点
-	vector<float> computeReducedCost();  // 计算所有节点的移除代价
+	vector<float> computeReducedCost(float DTpara[], bool artificial = false);  // 计算所有节点的移除代价
 	void computeInsertCost(Customer item, float &minValue, Customer &customer1, float &secondValue, Customer &customer2, 
 		float noiseAmount = 0.0f, bool noiseAdd = false, float penaltyPara = 0.0f);  
 	// 计算item节点在路径中的最小插入代价和次小插入代价
@@ -40,7 +40,9 @@ public:
 	// 计算把item插入到pre后面是否会违反时间窗约束
 	void refreshArrivedTime();   // 更新一下各个节点的到达时刻
 	void changeCarIndex(int newIndex);  // 更新车辆编号
-	float getLen(vector<float> DTpara, bool artificial = false);   // 得到路径长度
+	float getLen(float DTpara[], bool artificial = false);   // 得到路径长度
+	Customer getHeadNode();    // 得到头结点
+	Customer getRearNode();    // 得到尾节点
 	vector<float> getArrivedTime();     // 得到本车所有节点的arrivedTime，注意第一个元素是0
 private:
 	Customer *head, *current, *rear;  // 表头，表尾和当前指针，当前指针指向货车当前的驻地

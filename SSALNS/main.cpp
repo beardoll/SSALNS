@@ -9,9 +9,9 @@
 
 using namespace std;
 
-static const string FILE_PATH = "C:/Users/cfinsbear/Documents/SSALNS/SSALNS/solomon-1987-rc1/";
+static const string FILE_PATH = "C:/Users/beardollPC/Documents/Visual Studio 2012/Projects/SSALNS/SSALNS/solomon-1987-rc1/";
 static const string FILE_NAME = "RC105_100.xml";
-static const string FILE_PATH2 = "C:/Users/cfinsbear/Documents/SSALNS/SSALNS/ALNS_Result/";
+static const string FILE_PATH2 = "C:/Users/beardollPC/Documents/Visual Studio 2012/Projects/SSALNS/SSALNS/ALNS_Result/";
 static const string FILE_NAME2 = FILE_NAME;
 static const int NUM_OF_CUSTOMER = 100;
 
@@ -40,10 +40,11 @@ vector<Customer*> constructCustomerSet(vector<int> idSet, vector<Customer*> allC
 	return customerSet;
 }
 
-void constructScenario(vector<Customer*> allCustomer, Customer depot, float capacity, vector<Car*> &initialPlan, vector<Customer*> &PR2, vector<Customer*> &PR3) {
+void constructScenario(vector<Customer*> allCustomer, Customer depot, float capacity, vector<Car*> &initialPlan, vector<Customer*> &PR2) {
 	//int a1[4] = {61, 39, 37, 70};
 	//int a2[5] = {54, 44, 41, 71, 93};
 	//int a3[4] = {92, 62, 67, 80};
+
 	//int a4[5] = {2, 8, 6, 4, 100};
 	//int b[8] = {57, 23, 18, 22, 74, 82, 75, 58};
 	//int c[8] = {65, 87, 84, 33, 27, 28, 26, 34};
@@ -51,13 +52,13 @@ void constructScenario(vector<Customer*> allCustomer, Customer depot, float capa
 	//int a2[5] = {92, 62, 28, 50, 93};
 	//int a3[4] = {82, 10, 13, 17};
 	//int a4[3] = {71, 84, 66};
-	//int b[7] = {45, 3, 8, 7, 46, 8, 83};
+	//int b[11] = {45, 3, 8, 7, 46, 14, 83, 23, 49, 20, 53};
 	//int c[12] = {23, 49, 20, 53, 12, 14, 15, 16, 47, 78, 64, 86};
 	int a1[3] = {88, 73, 60};
 	int a2[4] = {65, 52, 57, 74};
 	int a3[4] = {12, 15, 47, 55};
-	int b[4] = {83, 23, 36, 66};
-	int c[7] = {18, 20, 45, 5, 76, 48, 71};
+	int b[11] = {83, 23, 36, 66, 18, 20, 45, 5, 76, 48, 71};
+	// int c[7] = {18, 20, 45, 5, 76, 48, 71};
 	initialPlan.reserve(4);
 	vector<int> temp1(a1, a1+3);
 	Car* c1 = constructCar(temp1, allCustomer, depot,  depot, 1, capacity);
@@ -70,13 +71,10 @@ void constructScenario(vector<Customer*> allCustomer, Customer depot, float capa
 	initialPlan.push_back(c1);
 	initialPlan.push_back(c2);
 	initialPlan.push_back(c3);
-	//initialPlan.push_back(c4);
-	PR2.reserve(4);
-	vector<int> temp5(b, b+4);
+	// initialPlan.push_back(c4);
+	PR2.reserve(11);
+	vector<int> temp5(b, b+11);
 	PR2 = constructCustomerSet(temp5, allCustomer, 2);
-	PR3.reserve(7);
-	vector<int> temp6(c, c+7);
-	PR3 = constructCustomerSet(temp6, allCustomer, 3);
 }
 
 int main(){
@@ -90,10 +88,10 @@ int main(){
 	vector<Car*> initialPlan;
 	vector<Customer*> PR2;
 	vector<Customer*> PR3;
-	constructScenario(allCustomer, depot, capacity, initialPlan, PR2, PR3);
-	SSALNS alg = SSALNS(PR2, PR3, initialPlan, depot, capacity);
+	constructScenario(allCustomer, depot, capacity, initialPlan, PR2);
 	vector<Car*> finalCarSet;
 	float finalCost=0;
+	SSALNS alg = SSALNS(PR2, initialPlan, depot, capacity);
 	alg.run(finalCarSet, finalCost);
 	OutputFile of(finalCarSet, FILE_PATH2, FILE_NAME2, depot,finalCost);
 	of.exportData();
